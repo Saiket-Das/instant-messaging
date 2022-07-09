@@ -11,23 +11,31 @@ const userSchema = mongoose.Schema(
         email: {
             type: String,
             require: true,
-            unique: true,
+            unique: true
         },
-
         photo: {
             type: String,
             require: true,
-            default: 'https://cdn-icons.flaticon.com/png/512/552/premium/552909.png?token=exp=1657345208~hmac=ac918460e5a8d2824f7b33ff52789525',
+            default: "https://cdn-icons.flaticon.com/png/512/552/premium/552909.png?token=exp=1655876072~hmac=90e4bf1d43e2c423c778631e405fafec"
         },
-
         isAdmin: {
             type: Boolean,
             required: true,
             default: false,
         },
+    },
+    {
+        timestamps: true,
     }
 )
 
 
+userSchema.pre('save', async function (next) {
+    if (!this.isModified) {
+        next()
+    }
+})
+
 const User = mongoose.model('User', userSchema);
+
 module.exports = User;

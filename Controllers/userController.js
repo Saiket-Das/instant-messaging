@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../Models/userModel');
+const generateJsonToken = require('../Database/generateJsonToken')
 
 
 // ----------------- REGISTER NEW USER -----------------
@@ -12,9 +13,9 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('Please fill up the all fields')
     }
 
-    const userExit = await User.findOne({ email });
+    const userExists = await User.findOne({ email });
 
-    if (userExit) {
+    if (userExists) {
         res.status(400);
         throw new Error(`Already account created with this ${email}`)
     }
@@ -31,11 +32,10 @@ const registerUser = asyncHandler(async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            photo: user.photo
+            photo: user.photo,
+            jwt: generateJsonToken(user._id)
         })
     }
-
-
     else {
         res.status(400);
         throw new Error('User not found')
@@ -44,7 +44,31 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
+// ----------------- CURRENT LOGGED IN USER -----------------
+const currentUser = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (user) {
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            photo: user.photo,
+            jwt: generateJsonToken(user._id)
+        })
+    }
+    else {
+        res.status(400)
+        throw new Error('User not found')
+    }
+});
+
+
+
+// ----------------- ALL USERS -----------------
 const allUsers = asyncHandler(async (req, res) => {
+
     const keyword = req.query.search ? {
         $or: [
             { name: { $regex: req.query.search, $options: 'i' } },
@@ -52,11 +76,11 @@ const allUsers = asyncHandler(async (req, res) => {
         ]
     } : {};
 
-    const searchUser = await User.find(keyword);
+    const searchUser = await User.find(keyword).find({ _id: { $ne: req.user._id } });;
     res.send(searchUser)
 })
 
 
 
 
-module.exports = { registerUser, allUsers }
+module.exports = { registerUser, currentUser, allUsers }

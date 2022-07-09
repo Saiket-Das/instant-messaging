@@ -3,21 +3,26 @@ const dbConnection = require('./Database/db');
 
 
 const userRoutes = require('./Routes/userRoutes')
+const chatRoutes = require('./Routes/chatRoutes')
+const path = require('path')
+
+
 
 const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
+dbConnection()
 
 
 // ------> Middleware 
 app.use(cors());;
 app.use(express.json());
-dbConnection()
 
 
 
 app.use('/api/user', userRoutes);
+app.use('/api/chat', chatRoutes);
 
 
 
