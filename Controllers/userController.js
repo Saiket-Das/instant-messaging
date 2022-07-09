@@ -12,7 +12,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('Please fill up the all fields')
     }
 
-    const userExit = await User.find({ email });
+    const userExit = await User.findOne({ email });
 
     if (userExit) {
         res.status(400);
@@ -44,4 +44,19 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-module.exports = { registerUser }
+const allUsers = asyncHandler(async (req, res) => {
+    const keyword = req.query.search ? {
+        $or: [
+            { name: { $regex: req.query.search, $options: 'i' } },
+            { email: { $regex: req.query.search, $options: 'i' } }
+        ]
+    } : {};
+
+    const searchUser = await User.find(keyword);
+    res.send(searchUser)
+})
+
+
+
+
+module.exports = { registerUser, allUsers }
