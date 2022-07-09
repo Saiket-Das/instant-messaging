@@ -1,9 +1,23 @@
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+// const { MongoClient, ServerApiVersion } = require('mongodb');
+const mongoose = require('mongoose');
+const colors = require("colors");
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-    const collection = client.db("test").collection("devices");
-    // perform actions on the collection object
-    client.close();
-});
+
+const dbConnection = async () => {
+    try {
+        const connect = await new mongoose.connect(process.env.MONGODB_URI,
+            {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+            });
+        console.log(`MongoDB Connected: ${connect.connection.host}`.green.underline)
+
+    } catch (error) {
+        console.log(`Error: ${error.message}`.red.bold);
+        process.exit();
+    }
+};
+
+module.exports = dbConnection;
+
