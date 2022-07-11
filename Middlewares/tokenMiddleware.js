@@ -17,7 +17,6 @@ const jwtVerification = asyncHandler(async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
             req.user = await User.findById(decoded.id).select("-__v");
-            console.log('Req User Middleware', req.user);
             next();
         } catch (error) {
             res.status(403);

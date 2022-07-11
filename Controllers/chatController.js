@@ -4,11 +4,10 @@ const User = require('../Models/userModel');
 
 
 
-// ------------------- ACCESS E CHAT 
+// ------------------- CREATE OR ACCESS CHAT 
 const accessChat = asyncHandler(async (req, res) => {
 
     const { userId } = req.body;
-    console.log('Req User Middleware', req.user);
 
     if (!userId) {
         console.log("UserId param not sent with request");
@@ -56,7 +55,7 @@ const accessChat = asyncHandler(async (req, res) => {
 
 
 
-// ------------------- ACCESS ALL CHAT 
+// ------------------- FETCH ALL CHATS 
 const fetchChats = asyncHandler(async (req, res) => {
     try {
         Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
@@ -79,6 +78,70 @@ const fetchChats = asyncHandler(async (req, res) => {
 })
 
 
-module.exports = { accessChat, fetchChats };
 
-// , fetchChats, createGroupChat, renameGroup, addMemberToGroup, removeMemberFromGroup
+// ------------------- CREATE GROUP CHAT 
+const createGroupChat = asyncHandler(async (req, res) => {
+
+    if (!req.body.users || !req.body.name) {
+        return res.status(400).send({ message: 'Please fill all the fields!' })
+    }
+
+
+    var users = JSON.parse(req.body.users);
+
+    if (users.length < 0) {
+        return res.status(400).send({ message: 'More than 2 users are required in a group chat' })
+    }
+
+    users.push(req.user);
+
+    try {
+        const groupChat = await Chat.create({
+            chatName: req.body.name,
+            users: users,
+            isGroupChat: true,
+            groupAdmin: req.user,
+        })
+        const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
+            .populate('users')
+            .populate('groupAdmin')
+
+        res.send(fullGroupChat).status(200);
+    }
+
+    catch (erorr) {
+        res.status(400);
+        throw new Error(error.message);
+    }
+
+})
+
+
+
+// ------------------- RENAME GROUP CHAT 
+const renameGrouoChat = asyncHandler(async (req, res) => {
+
+    const { chatId, chatName } = req.body;
+
+    const renameChatName = await Chat.findByIdAndUpdate(
+        chatId,
+        { chatName: chatName },
+        { new: true }
+    )
+        .populate('users')
+        .populate('groupAdmin')
+
+    if (!renameChatName) {
+        res.status(400);
+        throw new Error('Chat not Found');
+    }
+    else {
+        res.json(renameChatName)
+    }
+})
+
+
+
+module.exports = { accessChat, fetchChats, createGroupChat, renameGrouoChat };
+
+// addMemberToGroup, removeMemberFromGroup
